@@ -1,21 +1,31 @@
-//
-//  ContentView.swift
-//  AsyncImageGrid
-//
-//  Created by Donggyun Yang on 7/24/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    
+    @StateObject private var viewModel = ImageViewModel()
+    
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(viewModel.imageItems.indices, id: \.self) { index in
+                        ImageCell(
+                            viewModel: viewModel,
+                            item: viewModel.imageItems[index],
+                            index: index
+                        )
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Lazy Image Grid")
         }
-        .padding()
     }
 }
 
