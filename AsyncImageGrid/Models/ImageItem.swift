@@ -8,9 +8,8 @@ import Foundation
 import UIKit
 
 struct ImageItem: Identifiable {
-    let id: UUID = UUID()
+    let id = UUID()
     let imageUrl: URL
-    var image: UIImage?
 }
 
 extension ImageItem {

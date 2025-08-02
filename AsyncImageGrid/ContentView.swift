@@ -1,8 +1,11 @@
+
 import SwiftUI
 
 struct ContentView: View {
     
-    @StateObject private var viewModel = ImageViewModel()
+    @StateObject private var viewModel = ImageViewModel(
+        imageCacheService: ImageCacheService.shared
+    )
     
     let columns = [
         GridItem(.flexible()),
@@ -14,11 +17,10 @@ struct ContentView: View {
         NavigationView {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(viewModel.imageItems.indices, id: \.self) { index in
+                    ForEach(viewModel.imageItems) { item in
                         ImageCell(
                             viewModel: viewModel,
-                            item: viewModel.imageItems[index],
-                            index: index
+                            item: item
                         )
                     }
                 }

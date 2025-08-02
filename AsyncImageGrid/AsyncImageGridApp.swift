@@ -1,9 +1,3 @@
-//
-//  AsyncImageGridApp.swift
-//  AsyncImageGrid
-//
-//  Created by Donggyun Yang on 7/24/25.
-//
 
 import SwiftUI
 

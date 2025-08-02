@@ -1,61 +1,38 @@
-//
-//  ImageViewModel.swift
-//  AsyncImageGrid
-//
-//  Created by Donggyun Yang on 7/26/25.
-//
+
 import Foundation 
 import UIKit
 
 enum ImageError: Error {
     case cannotLoadImage
+    case outOfRange
 }
 
 class ImageViewModel: ObservableObject {
-    @Published var imageItems: [ImageItem] = []
+    @Published var imageItems: [ImageItem]
+    private let imageCacheService: ImageCacheService
     
-    init() {
+    init(imageCacheService: ImageCacheService) {
+        self.imageCacheService = imageCacheService
+        
         self.imageItems = ImageItem.TEST_IMAGES_1000
             .compactMap { URL(string: $0) }
-            .map { ImageItem(imageUrl: $0, image: nil) }
+            .map { ImageItem(imageUrl: $0) }
     }
     
-    func loadImage(at index: Int) async -> Void {
+    @MainActor
+    func loadImage(for item: ImageItem) async -> UIImage? {
+        let url = NSString(string: item.imageUrl.absoluteString)
+        if let image = imageCacheService.getImage(URL: url) {
+            return image
+        }
+        
         do {
-            let image = try await downloadImage(from: self.imageItems[index].imageUrl)
-            
-            await MainActor.run {
-                self.imageItems[index].image = image
-            }
+            let image = try await downloadImage(from: item.imageUrl)
+            imageCacheService.setImage(URL: url, image: image)
+            return image
         } catch {
             print("이미지 로딩에 실패했습니다. \(error)")
-        }
-    }
-    
-    func fetchAllImages() async throws -> Void {
-        try await withThrowingTaskGroup(of: Result<(Int, UIImage), Error>.self) { group in
-            for (index, item) in self.imageItems.enumerated() {
-                group.addTask {
-                    do {
-                        let image = try await self.downloadImage(from: item.imageUrl)
-                        return .success((index, image))
-                    } catch {
-                        return .failure(error)
-                    }
-                }
-            }
-            
-            for try await result in group {
-                switch result {
-                case .success(let (index, image)):
-                    await MainActor.run {
-                        self.imageItems[index].image = image
-                    }
-                    break
-                case .failure(let error):
-                    print("이미지 다운로드 에러 \(error)")
-                }
-            }
+            return nil
         }
     }
     
@@ -67,5 +44,10 @@ class ImageViewModel: ObservableObject {
         }
         
         return image
+    }
+    
+    // Note: fetchAllImages is kept for future reference but is not used in the Lazy Loading architecture.
+    func fetchAllImages() async throws {
+        // ... (implementation from previous steps)
     }
 }
